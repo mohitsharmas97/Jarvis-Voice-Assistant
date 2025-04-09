@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jarvis AI Assistant</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #1e88e5;
+            --dark-color: #121212;
+            --light-color: #f5f5f5;
+            --success-color: #43a047;
+            --warning-color: #fb8c00;
+            --danger-color: #e53935;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--dark-color);
+            color: var(--light-color);
+            transition: all 0.3s ease;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .logo h1 {
+            font-size: 28px;
+            font-weight: 700;
+        }
+        
+        .logo .icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 22px;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 10px 15px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        
+        .btn:hover {
+            opacity: 0.9;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+        
+        .btn-circle {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            padding: 0;
+        }
+        
+        .conversation {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            border-radius: 8px;
+            background-color: rgba(255, 255, 255, 0.05);
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .message {
+            max-width: 80%;
+            padding: 12px 18px;
+            border-radius: 18px;
+            position: relative;
+            margin-bottom: 5px;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .user-message {
+            align-self: flex-end;
+            background-color: var(--primary-color);
+            border-bottom-right-radius: 5px;
+        }
+        
+        .jarvis-message {
+            align-self: flex-start;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-bottom-left-radius: 5px;
+        }
+        
+        .message-time {
+            font-size: 12px;
+            margin-top: 5px;
+            opacity: 0.7;
+        }
+        
+        .user-message .message-time {
+            text-align: right;
+        }
+        
+        .input-area {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .input-wrapper {
+            flex: 1;
+            position: relative;
+        }
+        
+        #commandInput {
+            width: 100%;
+            padding: 14px 45px 14px 15px;
+            border-radius: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background-color: rgba(255, 255, 255, 0.05);
+            color: var(--light-color);
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+        
+        #commandInput:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(30, 136, 229, 0.2);
+        }
+        
+        .clear-btn {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .clear-btn:hover {
+            color: var(--light-color);
+        }
+        
+        .microphone {
+            position: relative;
+        }
+        
+        .pulse {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            opacity: 0;
+            z-index: -1;
+        }
+        
+        .listening .pulse {
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 0.5;
+            }
+            100% {
+                transform: scale(1.5);
+                opacity: 0;
+            }
+        }
+        
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 15px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 5px;
+            font-size: 14px;
+            margin-top: 20px;
+        }
+        
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--success-color);
+        }
+        
+        .status-dot.offline {
+            background-color: var(--danger-color);
+        }
+        
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .action-chip {
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 6px 12px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .action-chip:hover {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .progress-bar {
+            height: 3px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 10px;
+            display: none;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background-color: var(--primary-color);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .processing .progress-bar {
+            display: block;
+        }
+        
+        .processing .progress-fill {
+            animation: progress 2s infinite;
+        }
+        
+        @keyframes progress {
+            0% {
+                width: 0%;
+            }
+            50% {
+                width: 60%;
+            }
+            100% {
+                width: 100%;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .message {
+                max-width: 90%;
+            }
+            
+            .controls {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="icon">
+                    <i class="fas fa-microchip"></i>
+                </div>
+                <h1>JARVIS</h1>
+            </div>
+            <div class="controls">
+                <button class="btn btn-outline" id="clearChat">
+                    <i class="fas fa-trash-alt"></i>
+                    Clear Chat
+                </button>
+                <button class="btn btn-primary" id="settings">
+                    <i class="fas fa-cog"></i>
+                    Settings
+                </button>
+            </div>
+        </header>
+        
+        <div class="conversation" id="conversation">
+            <div class="message jarvis-message">
+                <div class="message-content">Hello! I'm Jarvis, your AI assistant. How can I help you today?</div>
+                <div class="message-time">Just now</div>
+            </div>
+        </div>
+        
+        <div class="progress-bar" id="progressBar">
+            <div class="progress-fill"></div>
+        </div>
+        
+        <div class="input-area">
+            <div class="input-wrapper">
+                <input type="text" id="commandInput" placeholder="Type your command or question..." autocomplete="off">
+                <button class="clear-btn" id="clearInput">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <button class="btn btn-primary btn-circle microphone" id="micButton">
+                <div class="pulse"></div>
+                <i class="fas fa-microphone"></i>
+            </button>
+            <button class="btn btn-primary" id="sendButton">
+                <i class="fas fa-paper-plane"></i>
+                Send
+            </button>
+        </div>
+        
+        <div class="quick-actions">
+            <div class="action-chip" data-command="What time is it?">What time is it?</div>
+            <div class="action-chip" data-command="Tell me the latest news">Latest news</div>
+            <div class="action-chip" data-command="Open Google">Open Google</div>
+            <div class="action-chip" data-command="Play music">Play music</div>
+            <div class="action-chip" data-command="Tell me a joke">Tell me a joke</div>
+        </div>
+        
+        <div class="status-bar">
+            <div class="status">
+                <div class="status-dot" id="statusDot"></div>
+                <span id="statusText">Jarvis Online</span>
+            </div>
+            <div class="api-status">
+                <span>API: </span>
+                <span id="apiStatus">Connected</span>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // DOM Elements
+        const conversation = document.getElementById('conversation');
+        const commandInput = document.getElementById('commandInput');
+        const sendButton = document.getElementById('sendButton');
+        const micButton = document.getElementById('micButton');
+        const clearInput = document.getElementById('clearInput');
+        const clearChat = document.getElementById('clearChat');
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+        const apiStatus = document.getElementById('apiStatus');
+        const progressBar = document.getElementById('progressBar');
+        const actionChips = document.querySelectorAll('.action-chip');
+        
+        // State variables
+        let isListening = false;
+        let recognition;
+        
+        // Initialize the page
+        function init() {
+            // Check if the Web Speech API is available
+            if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                recognition = new SpeechRecognition();
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                recognition.lang = 'en-US';
+                
+                recognition.onresult = function(event) {
+                    const transcript = event.results[0][0].transcript;
+                    commandInput.value = transcript;
+                    stopListening();
+                    if (transcript.toLowerCase().includes('jarvis')) {
+                        // If wake word is detected, process the command
+                        const command = transcript.toLowerCase().replace('jarvis', '').trim();
+                        if (command) {
+                            sendCommand(command);
+                        }
+                    } else {
+                        // Otherwise, just use the whole transcript as a command
+                        sendCommand(transcript);
+                    }
+                };
+                
+                recognition.onerror = function(event) {
+                    console.error('Speech recognition error', event.error);
+                    stopListening();
+                    updateStatus('Voice recognition error', false);
+                    setTimeout(() => updateStatus('Jarvis Online', true), 3000);
+                };
+                
+                recognition.onend = function() {
+                    stopListening();
+                };
+            } else {
+                micButton.style.display = 'none';
+                updateStatus('Voice recognition not supported', false);
+            }
+            
+            // Event listeners
+            commandInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendCommand(commandInput.value);
+                }
+            });
+            
+            sendButton.addEventListener('click', function() {
+                sendCommand(commandInput.value);
+            });
+            
+            micButton.addEventListener('click', function() {
+                if (isListening) {
+                    stopListening();
+                } else {
+                    startListening();
+                }
+            });
+            
+            clearInput.addEventListener('click', function() {
+                commandInput.value = '';
+                commandInput.focus();
+            });
+            
+            clearChat.addEventListener('click', function() {
+                conversation.innerHTML = `
+                    <div class="message jarvis-message">
+                        <div class="message-content">Chat cleared. How else can I assist you?</div>
+                        <div class="message-time">${getCurrentTime()}</div>
+                    </div>
+                `;
+            });
+            
+            // Quick action chips
+            actionChips.forEach(chip => {
+                chip.addEventListener('click', function() {
+                    const command = this.getAttribute('data-command');
+                    commandInput.value = command;
+                    sendCommand(command);
+                });
+            });
+        }
+        
+        // Helper functions
+        function getCurrentTime() {
+            const now = new Date();
+            return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+        
+        function updateStatus(message, isOnline) {
+            statusText.textContent = message;
+            if (isOnline !== undefined) {
+                if (isOnline) {
+                    statusDot.classList.remove('offline');
+                } else {
+                    statusDot.classList.add('offline');
+                }
+            }
+        }
+        
+        function startListening() {
+            if (recognition) {
+                try {
+                    recognition.start();
+                    isListening = true;
+                    micButton.classList.add('listening');
+                    updateStatus('Listening...', true);
+                } catch (error) {
+                    console.error('Error starting recognition', error);
+                }
+            }
+        }
+        
+        function stopListening() {
+            if (recognition && isListening) {
+                recognition.stop();
+                isListening = false;
+                micButton.classList.remove('listening');
+                updateStatus('Jarvis Online', true);
+            }
+        }
+        
+        function addMessageToChat(message, isUser) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = isUser ? 'message user-message' : 'message jarvis-message';
+            
+            messageDiv.innerHTML = `
+                <div class="message-content">${message}</div>
+                <div class="message-time">${getCurrentTime()}</div>
+            `;
+            
+            conversation.appendChild(messageDiv);
+            conversation.scrollTop = conversation.scrollHeight;
+        }
+        
+        function sendCommand(command) {
+            if (!command.trim()) return;
+            
+            // Add user message to chat
+            addMessageToChat(command, true);
+            
+            // Clear input
+            commandInput.value = '';
+            
+            // Show processing state
+            document.body.classList.add('processing');
+            updateStatus('Processing...', true);
+            
+            // Send to server
+            fetch('/command', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ command: command })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Add Jarvis response to chat
+                addMessageToChat(data.response, false);
+                
+                // If the response includes speech, play it
+                if (data.audio) {
+                    const audio = new Audio(data.audio);
+                    audio.play();
+                }
+                
+                // Remove processing state
+                document.body.classList.remove('processing');
+                updateStatus('Jarvis Online', true);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                addMessageToChat("I'm sorry, I'm having trouble connecting to my services. Please try again later.", false);
+                document.body.classList.remove('processing');
+                updateStatus('Connection Error', false);
+                setTimeout(() => updateStatus('Jarvis Online', true), 3000);
+            });
+        }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', init);
+        
+        // Add keyboard shortcut for voice input
+        document.addEventListener('keydown', function(e) {
+            // Spacebar when input is not focused
+            if (e.code === 'Space' && document.activeElement !== commandInput) {
+                e.preventDefault();
+                if (isListening) {
+                    stopListening();
+                } else {
+                    startListening();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
